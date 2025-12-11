@@ -9,6 +9,9 @@ import os
 import time
 
 
+from datetime import datetime
+from django.utils import timezone
+
 class Command(BaseCommand):
     help = 'Send bulk emails from CSV using a Markdown template'
 
@@ -16,20 +19,38 @@ class Command(BaseCommand):
         parser.add_argument('--csv', type=str, required=True, help='Path to the CSV file')
         parser.add_argument('--template', type=str, required=True, help='Path to the Markdown template file')
         parser.add_argument('--subject', type=str, required=True, help='Subject of the email')
-        parser.add_argument('--name', type=str, required=True, help='Name of the campaign')
+        parser.add_argument('--name', type=str, help='Name of the campaign')
         parser.add_argument('--delay', type=int, default=10, help='Delay between emails in seconds (default: 10)')
         parser.add_argument('--dry-run', action='store_true', help='Simulate sending without actually sending')
-
+        parser.add_argument('--schedule', type=str, help='Schedule execution time (YYYY-MM-DD HH:MM:SS[+/-HH:MM])')
 
     def handle(self, *args, **options):
         csv_path = options['csv']
         template_path = options['template']
         # Subject from CLI is fallback/override
         cli_subject = options['subject']
-        campaign_name = options['name']
+        campaign_name = options.get('name') or f"Campaign {datetime.now().strftime('%Y-%m-%d %H:%M')}"
         delay = options['delay']
         dry_run = options['dry_run']
+        schedule = options['schedule']
 
+        if schedule:
+            try:
+                scheduled_time = datetime.fromisoformat(schedule)
+                if timezone.is_naive(scheduled_time):
+                    self.stdout.write(self.style.WARNING("Warning: Naive time provided for schedule. Assuming UTC. Use +/-HH:MM to specify timezone."))
+                    scheduled_time = timezone.make_aware(scheduled_time, timezone.utc)
+                
+                now = timezone.now()
+                wait_seconds = (scheduled_time - now).total_seconds()
+                
+                if wait_seconds > 0:
+                    self.stdout.write(self.style.WARNING(f"Scheduling campaign for {schedule} (waiting {int(wait_seconds)} seconds)..."))
+                    time.sleep(wait_seconds)
+                else:
+                    self.stdout.write(self.style.WARNING(f"Scheduled time {schedule} (UTC equivalent: {scheduled_time}) is in the past (Now: {now}). Starting immediately."))
+            except ValueError:
+                raise CommandError(f"Invalid date format for --schedule: '{schedule}'. Use 'YYYY-MM-DD HH:MM:SS[+/-HH:MM]'")
 
         if not os.path.exists(csv_path):
             raise CommandError(f'CSV file not found: {csv_path}')
