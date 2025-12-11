@@ -1,0 +1,8 @@
+Django>=5.0.0
+html2text
+python-dotenv
+markdown
+beautifulsoup4
+dj-database-url
+whitenoise
+mixpanel
