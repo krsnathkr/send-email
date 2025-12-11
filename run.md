@@ -1,1 +1,1 @@
-venv/bin/python manage.py send_campaign --csv test.csv --template templates/machine_learning_engineer.md --subject "Applying for Machine Learning Engineer Role" --name "ML Campaign"
+venv/bin/python manage.py send_campaign --csv csv/dec10_ds.csv --template templates/data_scientist.md --subject "dec10_ds" --name "dec10_ds" --delay 5

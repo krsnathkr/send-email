@@ -139,8 +139,8 @@ class Command(BaseCommand):
                 if dry_run:
                     self.stdout.write(f"\n[Dry Run] Sending to {email}...")
                     self.stdout.write(f"Subject: {rendered_subject}")
-                    self.stdout.write(f"--- Body (Preview 200 chars) ---")
-                    self.stdout.write(rendered_md[:200])
+                    self.stdout.write(f"--- Body (Full Preview) ---")
+                    self.stdout.write(rendered_md)
                     self.stdout.write(f"--------------------------------\n")
                     continue
 
